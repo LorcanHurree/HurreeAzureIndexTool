@@ -27,10 +27,10 @@ from tqdm import tqdm
 from difflib import SequenceMatcher
 from io import StringIO
 
-openai_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+openai_client = None
 
 def uploadSettings(file):
-    
+    global openai_client
     bytes_data = file.getvalue()
     print(bytes_data)
 
@@ -52,6 +52,10 @@ def uploadSettings(file):
         # name, value = items.replace(" ", "").split("=")
         if settingName in settingNames:
             st.session_state[settingName] = settingValue
+
+    if openai_client == None:
+        openai_client = OpenAI(api_key=st.session_state["OPENAI_API_KEY"])
+
 
 
 def createIndex():
