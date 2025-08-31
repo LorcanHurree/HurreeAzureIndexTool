@@ -59,9 +59,9 @@ def uploadSettings(file):
 
 
 def createIndex():
-    AzureOpenAiEndPoint = st.secrets['AzureOpenAiEndPoint']
-    index_name = st.secrets['search_index_name']
-    index_client = SearchIndexClient(endpoint=st.secrets['search_endpoint'], credential=AzureKeyCredential(st.secrets['search_admin_key']))
+    AzureOpenAiEndPoint = st.session_state['AzureOpenAiEndPoint']
+    index_name = st.session_state['search_index_name']
+    index_client = SearchIndexClient(endpoint=st.session_state['search_endpoint'], credential=AzureKeyCredential(st.session_state['search_admin_key']))
 
     fields=[
         SearchField(name="id", type="Edm.String", key=True, filterable=True),
@@ -101,7 +101,7 @@ def createIndex():
 
 def get_all_documents_from_index():
 
-    search_client = SearchClient(endpoint=st.secrets["search_endpoint"], index_name=st.secrets["search_index_name"], credential=AzureKeyCredential(st.secrets["search_admin_key"]))
+    search_client = SearchClient(endpoint=st.session_state["search_endpoint"], index_name=st.session_state["search_index_name"], credential=AzureKeyCredential(st.session_state["search_admin_key"]))
 
     resultData = []
     skip = 0
@@ -160,7 +160,7 @@ def get_embedding(text: str) -> list[float]:
 
 def perform_vector_search(query_text: str, count: int):
     
-    search_client = SearchClient(endpoint=st.secrets["search_endpoint"], index_name=st.secrets["search_index_name"], credential=AzureKeyCredential(st.secrets["search_admin_key"]))
+    search_client = SearchClient(endpoint=st.session_state["search_endpoint"], index_name=st.session_state["search_index_name"], credential=AzureKeyCredential(st.session_state["search_admin_key"]))
 
     try:
         print(f"\nGenerating embedding for query: '{query_text}'...")
@@ -220,7 +220,7 @@ def perform_ID_search(ID: str):
         return None
 
 def deleteDocument(ID: str):
-    search_client = SearchClient(endpoint=st.secrets["search_endpoint"], index_name=st.secrets["search_index_name"], credential=AzureKeyCredential(st.secrets["search_admin_key"]))
+    search_client = SearchClient(endpoint=st.session_state["search_endpoint"], index_name=st.session_state["search_index_name"], credential=AzureKeyCredential(st.session_state["search_admin_key"]))
     try:
         # The delete_documents method takes a list of dictionaries, where each dictionary
         # represents a document to be deleted and must contain its key field.
@@ -242,7 +242,7 @@ def searchIndexByText(text):
     #     if text in row["text"]:
     #         return True
     # return False
-    search_client = SearchClient(endpoint=st.secrets["search_endpoint"], index_name=st.secrets["search_index_name"], credential=AzureKeyCredential(st.secrets["search_admin_key"]))
+    search_client = SearchClient(endpoint=st.session_state["search_endpoint"], index_name=st.session_state["search_index_name"], credential=AzureKeyCredential(st.session_state["search_admin_key"]))
     
     try:
         
@@ -265,7 +265,7 @@ def searchIndexByText(text):
         return False
 
 def upload_document(text):
-    search_client = SearchClient(endpoint=st.secrets["search_endpoint"], index_name=st.secrets["search_index_name"], credential=AzureKeyCredential(st.secrets["search_admin_key"]))
+    search_client = SearchClient(endpoint=st.session_state["search_endpoint"], index_name=st.session_state["search_index_name"], credential=AzureKeyCredential(st.session_state["search_admin_key"]))
     
     alreadyExists = searchIndexByText(text)
     if alreadyExists is None:
@@ -283,7 +283,7 @@ def upload_document(text):
         # Check for successful uploads
         for result in results:
             if result.succeeded:
-                return f"Successfully uploaded to {st.secrets['search_index_name']}."
+                return f"Successfully uploaded to {st.session_state['search_index_name']}."
             else:
                 return f"Failed to upload document with key '{result.key}': {result.error_message}"
     else:
@@ -292,7 +292,7 @@ def upload_document(text):
 def getBlobAndIndexDataBackup():
     indexDocs = get_all_documents_from_index()
     
-    blob_service_client = BlobServiceClient.from_connection_string(st.secrets["BlobServiceConnectionString"])
+    blob_service_client = BlobServiceClient.from_connection_string(st.session_state["BlobServiceConnectionString"])
     container_client = blob_service_client.get_container_client("chatbot-data")
     blob_list = container_client.list_blobs()
 
@@ -325,7 +325,7 @@ def getBlobAndIndexData():
     indexDocs["matched"] = 0
     unmatchedBlobDocs = []
     try:
-        blob_service_client = BlobServiceClient.from_connection_string(st.secrets["BlobServiceConnectionString"])
+        blob_service_client = BlobServiceClient.from_connection_string(st.session_state["BlobServiceConnectionString"])
         container_client = blob_service_client.get_container_client("chatbot-data")
 
         # First pass: Count the total number of blobs
@@ -373,7 +373,7 @@ def getBlobAndIndexData():
         yield {"status": "error", "message": str(e)}
 
 def massUploadFromBlob():
-    blob_service_client = BlobServiceClient.from_connection_string(st.secrets["BlobServiceConnectionString"])
+    blob_service_client = BlobServiceClient.from_connection_string(st.session_state["BlobServiceConnectionString"])
     container_client = blob_service_client.get_container_client("chatbot-data")
 
     blob_list_full = list(container_client.list_blobs())
